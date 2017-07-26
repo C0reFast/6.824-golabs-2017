@@ -33,13 +33,6 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 	// TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO TODO
 	//
 	restultChan := make(chan int)
-	workerChan := make(chan string)
-	go func() {
-		for {
-			worker := <-registerChan
-			workerChan <- worker
-		}
-	}()
 
 	for i := 0; i < ntasks; i++ {
 		arg := DoTaskArgs{}
@@ -52,11 +45,11 @@ func schedule(jobName string, mapFiles []string, nReduce int, phase jobPhase, re
 		}
 		go func(arg *DoTaskArgs) {
 			for {
-				worker := <-workerChan
+				worker := <-registerChan
 				result := call(worker, "Worker.DoTask", arg, nil)
 				if result {
 					restultChan <- arg.TaskNumber
-					workerChan <- worker
+					registerChan <- worker
 					return
 				}
 			}
